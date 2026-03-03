@@ -191,6 +191,20 @@
     font-size: 15px;
     line-height: 1.3;
   }
+  .station-brand {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
   .station-distance {
     font-family: 'Space Mono', monospace;
     font-size: 13px;
@@ -619,8 +633,9 @@ function renderStations(fuel) {
     <div class="station-card${isBest ? ' best' : ''}" onclick="flyTo(${lat},${lon})">
       <div class="station-top">
         <div>
+          ${s.enseignes ? `<div class="station-brand">${s.enseignes}</div>` : ''}
           <div class="station-name">
-            ${s.enseignes || s.ville || 'Station'}
+            ${s.ville || 'Station'}
             ${isBest ? '<span class="badge-best">Meilleur prix</span>' : ''}
           </div>
           <div class="station-address">${addr}</div>
@@ -728,6 +743,15 @@ document.getElementById('conso-input').addEventListener('change', () => {
     renderStations(fuel);
   }
 });
+
+// ─── Auto-locate if permission already granted ───
+if (navigator.permissions) {
+  navigator.permissions.query({ name: 'geolocation' }).then(result => {
+    if (result.state === 'granted') {
+      startLocate();
+    }
+  }).catch(() => {});
+}
 </script>
 
 </body>
