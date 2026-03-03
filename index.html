@@ -434,20 +434,36 @@ function startLocate() {
     return;
   }
 
+  function onPositionSuccess(pos) {
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('controls').style.display = 'flex';
+    document.getElementById('map-wrapper').style.display = 'block';
+    initMap();
+    fetchStations();
+  }
+
+  function onPositionError(err) {
+    showStatus('Impossible de vous géolocaliser : ' + err.message, true);
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg> Réessayer`;
+    btn.disabled = false;
+  }
+
+  // Try high accuracy first, then fall back to low accuracy (fixes desktop
+  // where GPS is unavailable and POSITION_UNAVAILABLE is returned).
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      userLat = pos.coords.latitude;
-      userLon = pos.coords.longitude;
-      document.getElementById('empty-state').style.display = 'none';
-      document.getElementById('controls').style.display = 'flex';
-      document.getElementById('map-wrapper').style.display = 'block';
-      initMap();
-      fetchStations();
-    },
+    onPositionSuccess,
     err => {
-      showStatus('Impossible de vous géolocaliser : ' + err.message, true);
-      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg> Réessayer`;
-      btn.disabled = false;
+      if (err.code === err.POSITION_UNAVAILABLE) {
+        navigator.geolocation.getCurrentPosition(
+          onPositionSuccess,
+          onPositionError,
+          { enableHighAccuracy: false, timeout: 15000 }
+        );
+      } else {
+        onPositionError(err);
+      }
     },
     { enableHighAccuracy: true, timeout: 10000 }
   );
