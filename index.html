@@ -450,20 +450,30 @@ function startLocate() {
     btn.disabled = false;
   }
 
-  // Try high accuracy first, then fall back to low accuracy (fixes desktop
-  // where GPS is unavailable and POSITION_UNAVAILABLE is returned).
+  // Last-resort fallback: IP-based geolocation when the browser/OS cannot
+  // determine position at all (common on desktop macOS with CoreLocation errors).
+  function ipFallback() {
+    fetch('https://get.geojs.io/v1/ip/geo.json')
+      .then(r => r.json())
+      .then(data => {
+        if (data.latitude && data.longitude) {
+          onPositionSuccess({ coords: { latitude: parseFloat(data.latitude), longitude: parseFloat(data.longitude) } });
+        } else {
+          onPositionError({ message: 'Localisation par IP indisponible' });
+        }
+      })
+      .catch(() => onPositionError({ message: 'Localisation par IP indisponible' }));
+  }
+
+  // Try high accuracy first, then low accuracy, then IP-based geolocation.
   navigator.geolocation.getCurrentPosition(
     onPositionSuccess,
-    err => {
-      if (err.code === err.POSITION_UNAVAILABLE) {
-        navigator.geolocation.getCurrentPosition(
-          onPositionSuccess,
-          onPositionError,
-          { enableHighAccuracy: false, timeout: 15000 }
-        );
-      } else {
-        onPositionError(err);
-      }
+    () => {
+      navigator.geolocation.getCurrentPosition(
+        onPositionSuccess,
+        () => ipFallback(),
+        { enableHighAccuracy: false, timeout: 15000 }
+      );
     },
     { enableHighAccuracy: true, timeout: 10000 }
   );
