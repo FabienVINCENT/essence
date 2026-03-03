@@ -580,8 +580,8 @@ function renderStations(fuel) {
   const bestPrice = Math.min(...prices);
 
   list.innerHTML = stations.map((s, i) => {
-    const lat = s.latitude || (s.geom && s.geom.lat);
-    const lon = s.longitude || (s.geom && s.geom.lon);
+    const lat = (s.geom && s.geom.lat) || (s.latitude && s.latitude / 100000);
+    const lon = (s.geom && s.geom.lon) || (s.longitude && s.longitude / 100000);
     const dist = lat && lon ? haversine(userLat, userLon, lat, lon) : (s.dist ? s.dist / 1000 : null);
     const road = dist ? roadDistance(dist) : null;
     const price = s[fuel + '_prix'];
@@ -649,8 +649,8 @@ function renderMapMarkers(fuel) {
   const bounds = [[userLat, userLon]];
 
   stations.forEach(s => {
-    const lat = s.latitude || (s.geom && s.geom.lat);
-    const lon = s.longitude || (s.geom && s.geom.lon);
+    const lat = (s.geom && s.geom.lat) || (s.latitude && s.latitude / 100000);
+    const lon = (s.geom && s.geom.lon) || (s.longitude && s.longitude / 100000);
     if (!lat || !lon) return;
     bounds.push([lat, lon]);
 
