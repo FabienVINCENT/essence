@@ -3,127 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PomPrix — Trouvez le carburant le moins cher</title>
+<title>Pom — Carburant au meilleur prix</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0c0f14;
-    --surface: #161a22;
-    --surface-2: #1e232d;
-    --border: #2a303c;
-    --text: #e8eaf0;
-    --text-dim: #8891a4;
-    --accent: #22d68a;
-    --accent-dim: #1a9e67;
-    --accent-glow: rgba(34,214,138,.12);
-    --danger: #f06449;
-    --warn: #f0c649;
-    --radius: 14px;
-    --radius-sm: 8px;
+    --bg: #0f0f0f;
+    --card: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e5e5e5;
+    --text-muted: #888;
+    --accent: #22c55e;
   }
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: system-ui, -apple-system, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100dvh;
     overflow-x: hidden;
   }
 
-  /* ─── Header ─── */
-  header {
-    padding: 24px 20px 16px;
-    text-align: center;
-    position: relative;
-    z-index: 10;
-  }
-  header::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-  }
-  .logo {
-    font-family: 'Space Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -1px;
-    background: linear-gradient(135deg, var(--accent) 0%, #6ee7b7 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .logo span { opacity: .5; }
-  .tagline {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-top: 2px;
-    letter-spacing: .3px;
+  /* ─── Layout container ─── */
+  .container {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 16px;
   }
 
-  /* ─── Controls ─── */
-  .controls {
-    padding: 16px 16px 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    max-width: 800px;
-    margin: 0 auto;
+  @media (min-width: 640px) {
+    .container { max-width: 600px; }
   }
-  .control-group {
+
+  /* ─── Header ─── */
+  header {
+    padding: 20px 16px 12px;
+    text-align: center;
+  }
+  header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+  header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ─── Sticky filter bar ─── */
+  .filter-bar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-bar .container {
+    display: flex;
+    gap: 8px;
+    padding: 0;
+  }
+  .filter-bar select,
+  .filter-bar input[type="number"] {
     flex: 1;
     min-width: 0;
-  }
-  .control-group label {
-    display: block;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-  }
-  select, input[type="number"] {
-    width: 100%;
-    padding: 10px 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 8px;
     color: var(--text);
     font-family: inherit;
     font-size: 13px;
     outline: none;
-    transition: border-color .2s;
+    transition: border-color 0.15s;
     -webkit-appearance: none;
   }
-  select:focus, input:focus {
+  .filter-bar select:focus,
+  .filter-bar input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
-  }
-
-  /* ─── Map ─── */
-  #map-wrapper {
-    padding: 16px;
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  #map {
-    height: 300px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    overflow: hidden;
-    z-index: 1;
-  }
-  @media (min-width: 640px) {
-    #map { height: 380px; }
   }
 
   /* ─── Status ─── */
@@ -131,189 +93,195 @@
     text-align: center;
     padding: 12px 16px;
     font-size: 13px;
-    color: var(--text-dim);
+    color: var(--text-muted);
   }
-  .status-bar.error { color: var(--danger); }
+  .status-bar.error { color: #ef4444; }
   .status-bar .spinner {
     display: inline-block;
     width: 14px; height: 14px;
     border: 2px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
-    animation: spin .6s linear infinite;
+    animation: spin 0.6s linear infinite;
     vertical-align: middle;
     margin-right: 6px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ─── Hero card (best price) ─── */
+  .hero-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .hero-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .hero-price {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .hero-station {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .hero-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .hero-cost {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .hero-trip-cost {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+  .hero-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #000;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+  .hero-btn:hover { opacity: 0.9; }
+
   /* ─── Station list ─── */
   .station-list {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 0 16px 80px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    padding-bottom: 20px;
   }
 
   .station-card {
-    background: var(--surface);
+    background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-    transition: border-color .2s, transform .15s;
+    border-radius: 12px;
+    padding: 14px 16px;
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
+    transition: border-color 0.15s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
   }
   .station-card:hover {
-    border-color: var(--accent-dim);
-    transform: translateY(-1px);
+    border-color: #444;
   }
-  .station-card.best::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 4px; height: 100%;
-    background: var(--accent);
-    border-radius: 4px 0 0 4px;
-  }
-
-  .station-top {
+  .station-row-1 {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .station-name {
-    font-weight: 700;
-    font-size: 15px;
-    line-height: 1.3;
-  }
-  .station-brand {
-    display: inline-block;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .8px;
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    padding: 2px 8px;
-    border-radius: 4px;
+    align-items: baseline;
     margin-bottom: 4px;
   }
-  .station-distance {
-    font-family: 'Space Mono', monospace;
+  .station-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .station-full-cost {
     font-size: 13px;
-    color: var(--accent);
+    color: var(--text-muted);
+  }
+  .station-row-2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .station-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .station-distance {
+    font-size: 13px;
+    color: var(--text-muted);
     white-space: nowrap;
-    background: var(--accent-glow);
-    padding: 3px 10px;
-    border-radius: 20px;
     flex-shrink: 0;
+    margin-left: 8px;
   }
   .station-address {
     font-size: 12px;
-    color: var(--text-dim);
+    color: var(--text-muted);
+  }
+
+  /* ─── Map toggle ─── */
+  .map-toggle-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.15s;
     margin-bottom: 12px;
   }
-
-  .fuel-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-    gap: 6px;
+  .map-toggle-btn:hover {
+    border-color: #444;
   }
-  .fuel-chip {
-    background: var(--surface-2);
-    border-radius: var(--radius-sm);
-    padding: 8px 6px;
+  #map-wrapper {
+    margin-bottom: 16px;
+    display: none;
+  }
+  #map {
+    height: 300px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  /* ─── Footer ─── */
+  footer {
     text-align: center;
-    min-width: 0;
-  }
-  .fuel-chip.highlight {
-    background: var(--accent-glow);
-    border: 1px solid rgba(34,214,138,.25);
-  }
-  .fuel-chip .fuel-type {
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin-bottom: 2px;
-  }
-  .fuel-chip .fuel-price {
-    font-family: 'Space Mono', monospace;
-    font-size: 16px;
-    font-weight: 700;
-  }
-  .fuel-chip .fuel-date {
-    font-size: 9px;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-
-  .cost-row {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .cost-label {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-  .cost-value {
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    color: var(--warn);
-  }
-  .cost-value.saving { color: var(--accent); }
-
-  .nav-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 8px;
+    padding: 24px 16px 32px;
     font-size: 12px;
-    color: var(--accent);
-    text-decoration: none;
-    opacity: .8;
-    transition: opacity .2s;
+    color: var(--text-muted);
   }
-  .nav-link:hover { opacity: 1; }
-
-  /* ─── Badge ─── */
-  .badge-best {
-    display: inline-block;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .8px;
-    color: var(--bg);
-    background: var(--accent);
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-left: 8px;
-    vertical-align: middle;
-  }
+  footer p + p { margin-top: 4px; }
 
   /* ─── Empty / Startup ─── */
   .empty-state {
     text-align: center;
     padding: 60px 20px;
-    color: var(--text-dim);
+    color: var(--text-muted);
   }
   .empty-state svg {
-    width: 64px; height: 64px;
-    stroke: var(--border);
+    width: 56px; height: 56px;
+    stroke: #444;
     margin-bottom: 16px;
   }
   .empty-state h3 {
@@ -328,61 +296,62 @@
     gap: 8px;
     padding: 12px 28px;
     background: var(--accent);
-    color: var(--bg);
+    color: #000;
     font-family: inherit;
     font-size: 15px;
     font-weight: 700;
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    transition: background .2s, transform .15s;
+    transition: opacity 0.15s, transform 0.15s;
     margin-top: 20px;
   }
-  .locate-btn:hover { background: var(--accent-dim); transform: scale(1.03); }
-  .locate-btn:active { transform: scale(.97); }
+  .locate-btn:hover { opacity: 0.9; transform: scale(1.03); }
+  .locate-btn:active { transform: scale(0.97); }
   .locate-btn svg { width: 18px; height: 18px; }
 
   /* ─── Leaflet overrides ─── */
   .leaflet-popup-content-wrapper {
-    background: var(--surface) !important;
+    background: var(--card) !important;
     color: var(--text) !important;
-    border-radius: var(--radius-sm) !important;
+    border-radius: 8px !important;
     border: 1px solid var(--border) !important;
-    box-shadow: 0 8px 24px rgba(0,0,0,.4) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
   }
-  .leaflet-popup-tip { background: var(--surface) !important; }
-  .leaflet-popup-content { font-family: 'DM Sans', sans-serif; font-size: 13px; }
+  .leaflet-popup-tip { background: var(--card) !important; }
+  .leaflet-popup-content { font-family: system-ui, sans-serif; font-size: 13px; }
 
-  /* Price tag markers on map */
-  .price-tag {
-    overflow: visible !important;
-  }
+  .price-tag { overflow: visible !important; }
 
   /* Dark map tiles */
-  .leaflet-tile-pane { filter: brightness(.85) contrast(1.1) saturate(.7); }
+  .leaflet-tile-pane { filter: brightness(0.85) contrast(1.1) saturate(0.7); }
+
+  /* ─── Desktop: 2-col grid for station cards ─── */
+  @media (min-width: 640px) {
+    .station-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">Pom<span>Prix</span></div>
-  <p class="tagline">Carburant au meilleur prix, à côté de chez vous</p>
+  <h1>Pom</h1>
+  <p>Carburant au meilleur prix</p>
 </header>
 
-<div class="controls" id="controls" style="display:none;">
-  <div class="control-group">
-    <label>Carburant</label>
+<div class="filter-bar" id="filter-bar" style="display:none;">
+  <div class="container">
     <select id="fuel-select">
-      <option value="e10">E10 (SP95-E10)</option>
+      <option value="e10">E10</option>
       <option value="sp95">SP95</option>
       <option value="sp98">SP98</option>
       <option value="gazole">Gazole</option>
       <option value="e85">E85</option>
-      <option value="gplc">GPLc</option>
     </select>
-  </div>
-  <div class="control-group">
-    <label>Rayon (km)</label>
     <select id="radius-select">
       <option value="5">5 km</option>
       <option value="10" selected>10 km</option>
@@ -390,15 +359,8 @@
       <option value="20">20 km</option>
       <option value="30">30 km</option>
     </select>
+    <input type="number" id="conso-input" value="6.5" min="1" max="30" step="0.1" placeholder="L/100km">
   </div>
-  <div class="control-group">
-    <label>Conso (L/100km)</label>
-    <input type="number" id="conso-input" value="6.5" min="1" max="30" step="0.1">
-  </div>
-</div>
-
-<div id="map-wrapper" style="display:none;">
-  <div id="map"></div>
 </div>
 
 <div class="status-bar" id="status" style="display:none;"></div>
@@ -420,7 +382,19 @@
   </div>
 </div>
 
-<div class="station-list" id="station-list"></div>
+<div class="container" id="results-container" style="display:none;">
+  <div id="hero"></div>
+  <div class="station-list" id="station-list"></div>
+  <button class="map-toggle-btn" id="map-toggle-btn" onclick="toggleMap()">Afficher la carte</button>
+  <div id="map-wrapper">
+    <div id="map"></div>
+  </div>
+</div>
+
+<footer>
+  <p>Données : prix-carburants.gouv.fr</p>
+  <p id="update-info"></p>
+</footer>
 
 <script>
 // ─── State ───
@@ -428,7 +402,8 @@ let userLat = null, userLon = null;
 let map = null, userMarker = null;
 let stationMarkers = [];
 let stations = [];
-let stationNames = {}; // Mapping id → { name, brand }
+let stationNames = {};
+let mapVisible = false;
 
 const API_BASE = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/records';
 const STATIONS_NAME_URL = 'https://raw.githubusercontent.com/Aohzan/hass-prixcarburant/master/custom_components/prix_carburant/stations_name.json';
@@ -442,11 +417,6 @@ fetch(STATIONS_NAME_URL)
 const FUEL_LABELS = {
   gazole: 'Gazole', sp95: 'SP95', sp98: 'SP98',
   e10: 'E10', e85: 'E85', gplc: 'GPLc'
-};
-
-const FUEL_COLORS = {
-  gazole: '#f0c649', sp95: '#49b3f0', sp98: '#9b59f0',
-  e10: '#22d68a', e85: '#f09849', gplc: '#f06479'
 };
 
 // ─── Geolocation ───
@@ -466,20 +436,17 @@ function startLocate() {
     userLat = pos.coords.latitude;
     userLon = pos.coords.longitude;
     document.getElementById('empty-state').style.display = 'none';
-    document.getElementById('controls').style.display = 'flex';
-    document.getElementById('map-wrapper').style.display = 'block';
-    initMap();
+    document.getElementById('filter-bar').style.display = 'block';
+    document.getElementById('results-container').style.display = 'block';
     fetchStations();
   }
 
   function onPositionError(err) {
     showStatus('Impossible de vous géolocaliser : ' + err.message, true);
-    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg> Réessayer`;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg> Réessayer';
     btn.disabled = false;
   }
 
-  // Last-resort fallback: IP-based geolocation when the browser/OS cannot
-  // determine position at all (common on desktop macOS with CoreLocation errors).
   function ipFallback() {
     fetch('https://get.geojs.io/v1/ip/geo.json')
       .then(r => r.json())
@@ -493,7 +460,6 @@ function startLocate() {
       .catch(() => onPositionError({ message: 'Localisation par IP indisponible' }));
   }
 
-  // Try high accuracy first, then low accuracy, then IP-based geolocation.
   navigator.geolocation.getCurrentPosition(
     onPositionSuccess,
     () => {
@@ -519,11 +485,29 @@ function initMap() {
 
   const userIcon = L.divIcon({
     className: '',
-    html: `<div style="width:18px;height:18px;background:#4285f4;border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(66,133,244,.5);"></div>`,
-    iconSize: [18,18], iconAnchor: [9,9]
+    html: '<div style="width:16px;height:16px;background:#4285f4;border:3px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(66,133,244,.5);"></div>',
+    iconSize: [16, 16], iconAnchor: [8, 8]
   });
   userMarker = L.marker([userLat, userLon], { icon: userIcon }).addTo(map)
     .bindPopup('<strong>Vous êtes ici</strong>');
+}
+
+function toggleMap() {
+  const wrapper = document.getElementById('map-wrapper');
+  const btn = document.getElementById('map-toggle-btn');
+  mapVisible = !mapVisible;
+
+  if (mapVisible) {
+    wrapper.style.display = 'block';
+    btn.textContent = 'Masquer la carte';
+    initMap();
+    const fuel = document.getElementById('fuel-select').value;
+    renderMapMarkers(fuel);
+    setTimeout(() => map.invalidateSize(), 100);
+  } else {
+    wrapper.style.display = 'none';
+    btn.textContent = 'Afficher la carte';
+  }
 }
 
 // ─── Fetch ───
@@ -551,13 +535,14 @@ async function fetchStations() {
 
     if (stations.length === 0) {
       showStatus(`Aucune station trouvant du ${FUEL_LABELS[fuel]} dans un rayon de ${radius} km`, true);
+      document.getElementById('hero').innerHTML = '';
       document.getElementById('station-list').innerHTML = '';
       return;
     }
 
     showStatus(`${stations.length} station${stations.length > 1 ? 's' : ''} trouvée${stations.length > 1 ? 's' : ''}`);
     renderStations(fuel);
-    renderMapMarkers(fuel);
+    if (mapVisible) renderMapMarkers(fuel);
   } catch (e) {
     console.error(e);
     showStatus('Erreur lors du chargement : ' + e.message, true);
@@ -569,26 +554,25 @@ function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function roadDistance(straightLine) {
-  // Estimation : distance route ≈ 1.35× distance vol d'oiseau
   return straightLine * 1.35;
 }
 
 function formatPrice(p) {
-  return p ? p.toFixed(3).replace('.', ',') + ' €' : '—';
+  return p ? p.toFixed(3).replace('.', ',') : '—';
 }
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   const diff = (Date.now() - d.getTime()) / 1000;
-  if (diff < 3600) return Math.round(diff/60) + ' min';
-  if (diff < 86400) return Math.round(diff/3600) + ' h';
-  return Math.round(diff/86400) + ' j';
+  if (diff < 3600) return Math.round(diff / 60) + ' min';
+  if (diff < 86400) return Math.round(diff / 3600) + ' h';
+  return Math.round(diff / 86400) + ' j';
 }
 
 function showStatus(msg, isError) {
@@ -598,107 +582,119 @@ function showStatus(msg, isError) {
   el.innerHTML = msg;
 }
 
+function getStationName(s) {
+  const info = stationNames[String(s.id)];
+  if (info) return info.name || info.brand || s.ville || 'Station';
+  return s.ville || 'Station';
+}
+
 function getStationBrand(s) {
   const info = stationNames[String(s.id)];
   return info ? (info.brand || info.name) : null;
 }
 
+// ─── Compute station data ───
+function computeStationData(s, fuel, conso) {
+  const lat = (s.geom && s.geom.lat) || (s.latitude && s.latitude / 100000);
+  const lon = (s.geom && s.geom.lon) || (s.longitude && s.longitude / 100000);
+  const dist = lat && lon ? haversine(userLat, userLon, lat, lon) : (s.dist ? s.dist / 1000 : null);
+  const road = dist ? roadDistance(dist) : null;
+  const price = s[fuel + '_prix'];
+  const tripCost = road && price ? (road * 2 * conso / 100 * price) : 0;
+  const fullCost = price ? price * 40 + tripCost : Infinity;
+  const addr = [s.adresse, s.cp, s.ville].filter(Boolean).join(', ');
+  const navUrl = lat && lon ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}` : '#';
+
+  return { lat, lon, dist, road, price, tripCost, fullCost, addr, navUrl };
+}
+
 // ─── Render ───
 function renderStations(fuel) {
-  const list = document.getElementById('station-list');
+  const heroEl = document.getElementById('hero');
+  const listEl = document.getElementById('station-list');
   const conso = parseFloat(document.getElementById('conso-input').value) || 6.5;
 
-  // Find best price
-  const prices = stations.map(s => s[fuel + '_prix']).filter(Boolean);
-  const bestPrice = Math.min(...prices);
+  // Compute data and sort by total cost
+  const stationsData = stations.map(s => ({
+    station: s,
+    ...computeStationData(s, fuel, conso)
+  }));
+  stationsData.sort((a, b) => a.fullCost - b.fullCost);
 
-  list.innerHTML = stations.map((s, i) => {
-    const lat = (s.geom && s.geom.lat) || (s.latitude && s.latitude / 100000);
-    const lon = (s.geom && s.geom.lon) || (s.longitude && s.longitude / 100000);
-    const dist = lat && lon ? haversine(userLat, userLon, lat, lon) : (s.dist ? s.dist / 1000 : null);
-    const road = dist ? roadDistance(dist) : null;
-    const price = s[fuel + '_prix'];
-    const isBest = price === bestPrice;
+  // Update footer with most recent update time
+  const majDates = stations.map(s => s[fuel + '_maj']).filter(Boolean);
+  if (majDates.length) {
+    const most_recent = majDates.sort().reverse()[0];
+    document.getElementById('update-info').textContent = 'Mis à jour : il y a ' + timeAgo(most_recent);
+  }
 
-    // Coût trajet A/R
-    const tripCost = road && price ? (road * 2 * conso / 100 * price) : null;
+  // Hero: best station
+  const best = stationsData[0];
+  if (best) {
+    const s = best.station;
+    heroEl.innerHTML = `
+      <div class="hero-card">
+        <div class="hero-label">Meilleur prix</div>
+        <div class="hero-price">${formatPrice(best.price)} €/L</div>
+        <div class="hero-station">${getStationName(s)}</div>
+        <div class="hero-meta">${best.road ? best.road.toFixed(1) + ' km' : '—'} · ${s.adresse || ''}</div>
+        <div class="hero-cost">Plein 40L = ${best.fullCost < Infinity ? best.fullCost.toFixed(2).replace('.', ',') + ' €' : '—'}</div>
+        <div class="hero-trip-cost">(dont ${best.tripCost ? best.tripCost.toFixed(2).replace('.', ',') : '0,00'} € de trajet)</div>
+        <a class="hero-btn" href="${best.navUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          Itinéraire
+        </a>
+      </div>`;
+  }
 
-    // Adresse
-    const addr = [s.adresse, s.cp, s.ville].filter(Boolean).join(', ');
-    const majDate = s[fuel + '_maj'];
-
-    // Build fuel chips for all available fuels
-    const fuels = ['gazole','sp95','sp98','e10','e85','gplc'];
-    const chips = fuels
-      .filter(f => s[f + '_prix'] && s[f + '_prix'] > 0)
-      .map(f => {
-        const isSelected = f === fuel;
-        return `<div class="fuel-chip${isSelected ? ' highlight' : ''}">
-          <div class="fuel-type">${FUEL_LABELS[f]}</div>
-          <div class="fuel-price" style="color:${FUEL_COLORS[f]}">${formatPrice(s[f + '_prix'])}</div>
-          ${s[f+'_maj'] ? `<div class="fuel-date">il y a ${timeAgo(s[f+'_maj'])}</div>` : ''}
-        </div>`;
-      }).join('');
-
-    const navUrl = lat && lon ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}` : '#';
-
+  // List: remaining stations
+  const rest = stationsData.slice(1);
+  listEl.innerHTML = rest.map(d => {
+    const s = d.station;
+    const name = getStationBrand(s) || getStationName(s);
     return `
-    <div class="station-card${isBest ? ' best' : ''}" onclick="flyTo(${lat},${lon})">
-      <div class="station-top">
-        <div>
-          ${getStationBrand(s) ? `<div class="station-brand">${getStationBrand(s)}</div>` : ''}
-          <div class="station-name">
-            ${s.ville || 'Station'}
-            ${isBest ? '<span class="badge-best">Meilleur prix</span>' : ''}
-          </div>
-          <div class="station-address">${addr}</div>
+      <a class="station-card" href="${d.navUrl}" target="_blank" rel="noopener">
+        <div class="station-row-1">
+          <span class="station-price">${formatPrice(d.price)} €/L</span>
+          <span class="station-full-cost">Plein: ${d.fullCost < Infinity ? d.fullCost.toFixed(2).replace('.', ',') + ' €' : '—'}</span>
         </div>
-        <div class="station-distance">${road ? road.toFixed(1) + ' km' : '—'}</div>
-      </div>
-      <div class="fuel-grid">${chips}</div>
-      <div class="cost-row">
-        <span class="cost-label">Coût trajet A/R estimé (${conso} L/100km)</span>
-        <span class="cost-value">${tripCost ? tripCost.toFixed(2).replace('.', ',') + ' €' : '—'}</span>
-      </div>
-      ${tripCost && price ? `
-      <div class="cost-row">
-        <span class="cost-label">Prix réel pour un plein de 40L (carburant + trajet)</span>
-        <span class="cost-value saving">${(price * 40 + tripCost).toFixed(2).replace('.', ',') + ' €'}</span>
-      </div>` : ''}
-      <a class="nav-link" href="${navUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
-        Itinéraire
-      </a>
-    </div>`;
+        <div class="station-row-2">
+          <span class="station-name">${name}</span>
+          <span class="station-distance">${d.road ? d.road.toFixed(1) + ' km' : '—'}</span>
+        </div>
+        <div class="station-address">${s.adresse || ''}</div>
+      </a>`;
   }).join('');
 }
 
 function renderMapMarkers(fuel) {
-  // Clear old
   stationMarkers.forEach(m => map.removeLayer(m));
   stationMarkers = [];
 
-  const prices = stations.map(s => s[fuel + '_prix']).filter(Boolean);
-  const bestPrice = Math.min(...prices);
+  const conso = parseFloat(document.getElementById('conso-input').value) || 6.5;
+  const stationsData = stations.map(s => ({
+    station: s,
+    ...computeStationData(s, fuel, conso)
+  }));
+  stationsData.sort((a, b) => a.fullCost - b.fullCost);
+
+  const bestFullCost = stationsData.length ? stationsData[0].fullCost : Infinity;
   const bounds = [[userLat, userLon]];
 
-  stations.forEach(s => {
-    const lat = (s.geom && s.geom.lat) || (s.latitude && s.latitude / 100000);
-    const lon = (s.geom && s.geom.lon) || (s.longitude && s.longitude / 100000);
-    if (!lat || !lon) return;
-    bounds.push([lat, lon]);
+  stationsData.forEach(d => {
+    if (!d.lat || !d.lon) return;
+    bounds.push([d.lat, d.lon]);
 
-    const price = s[fuel + '_prix'];
-    const isBest = price === bestPrice;
-    const color = isBest ? '#22d68a' : '#f0c649';
+    const isBest = d.fullCost === bestFullCost;
+    const color = isBest ? '#22c55e' : '#888';
 
     const icon = L.divIcon({
       className: 'price-tag',
       html: `<div style="
         display:inline-block;
         background:${color};
-        color:#0c0f14;
-        font-family:'Space Mono',monospace;
+        color:${isBest ? '#000' : '#fff'};
+        font-family:system-ui,sans-serif;
         font-size:11px;
         font-weight:700;
         padding:3px 7px;
@@ -707,13 +703,14 @@ function renderMapMarkers(fuel) {
         box-shadow:0 2px 8px rgba(0,0,0,.4);
         border:2px solid ${isBest ? '#fff' : 'transparent'};
         transform:translate(-50%,-50%);
-      ">${price ? price.toFixed(3) : '?'}€</div>`,
-      iconSize: [0,0]
+      ">${d.price ? d.price.toFixed(3) : '?'}€</div>`,
+      iconSize: [0, 0]
     });
 
-    const marker = L.marker([lat, lon], { icon })
+    const s = d.station;
+    const marker = L.marker([d.lat, d.lon], { icon })
       .addTo(map)
-      .bindPopup(`<strong>${getStationBrand(s) || s.ville || 'Station'}</strong><br>${s.adresse || ''}<br><strong style="color:${FUEL_COLORS[fuel]}">${FUEL_LABELS[fuel]} : ${formatPrice(price)}</strong>`);
+      .bindPopup(`<strong>${getStationName(s)}</strong><br>${s.adresse || ''}<br><strong>${FUEL_LABELS[fuel]} : ${formatPrice(d.price)} €</strong>`);
     stationMarkers.push(marker);
   });
 
@@ -723,7 +720,7 @@ function renderMapMarkers(fuel) {
 }
 
 function flyTo(lat, lon) {
-  if (map && lat && lon) map.flyTo([lat, lon], 15, { duration: .7 });
+  if (map && lat && lon) map.flyTo([lat, lon], 15, { duration: 0.7 });
 }
 
 // ─── Persistence ───
@@ -754,6 +751,7 @@ document.getElementById('conso-input').addEventListener('change', () => {
   if (stations.length) {
     const fuel = document.getElementById('fuel-select').value;
     renderStations(fuel);
+    if (mapVisible) renderMapMarkers(fuel);
   }
 });
 
