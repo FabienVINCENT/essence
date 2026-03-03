@@ -80,7 +80,7 @@
   }
   .control-group {
     flex: 1;
-    min-width: 140px;
+    min-width: 0;
   }
   .control-group label {
     display: block;
@@ -93,13 +93,13 @@
   }
   select, input[type="number"] {
     width: 100%;
-    padding: 10px 14px;
+    padding: 10px 8px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     color: var(--text);
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13px;
     outline: none;
     transition: border-color .2s;
     -webkit-appearance: none;
@@ -667,6 +667,7 @@ function renderMapMarkers(fuel) {
     const icon = L.divIcon({
       className: 'price-tag',
       html: `<div style="
+        display:inline-block;
         background:${color};
         color:#0c0f14;
         font-family:'Space Mono',monospace;
@@ -697,10 +698,31 @@ function flyTo(lat, lon) {
   if (map && lat && lon) map.flyTo([lat, lon], 15, { duration: .7 });
 }
 
+// ─── Persistence ───
+function loadSettings() {
+  const fuel = localStorage.getItem('pomprix_fuel');
+  const radius = localStorage.getItem('pomprix_radius');
+  const conso = localStorage.getItem('pomprix_conso');
+  if (fuel) document.getElementById('fuel-select').value = fuel;
+  if (radius) document.getElementById('radius-select').value = radius;
+  if (conso) document.getElementById('conso-input').value = conso;
+}
+function saveSetting(key, value) {
+  localStorage.setItem('pomprix_' + key, value);
+}
+loadSettings();
+
 // ─── Events ───
-document.getElementById('fuel-select').addEventListener('change', fetchStations);
-document.getElementById('radius-select').addEventListener('change', fetchStations);
+document.getElementById('fuel-select').addEventListener('change', () => {
+  saveSetting('fuel', document.getElementById('fuel-select').value);
+  fetchStations();
+});
+document.getElementById('radius-select').addEventListener('change', () => {
+  saveSetting('radius', document.getElementById('radius-select').value);
+  fetchStations();
+});
 document.getElementById('conso-input').addEventListener('change', () => {
+  saveSetting('conso', document.getElementById('conso-input').value);
   if (stations.length) {
     const fuel = document.getElementById('fuel-select').value;
     renderStations(fuel);
