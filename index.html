@@ -428,8 +428,16 @@ let userLat = null, userLon = null;
 let map = null, userMarker = null;
 let stationMarkers = [];
 let stations = [];
+let stationNames = {}; // Mapping id → { name, brand }
 
 const API_BASE = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/records';
+const STATIONS_NAME_URL = 'https://raw.githubusercontent.com/Aohzan/hass-prixcarburant/master/custom_components/prix_carburant/stations_name.json';
+
+// ─── Load station names ───
+fetch(STATIONS_NAME_URL)
+  .then(r => r.json())
+  .then(data => { stationNames = data; })
+  .catch(() => { console.warn('Impossible de charger les noms de stations'); });
 
 const FUEL_LABELS = {
   gazole: 'Gazole', sp95: 'SP95', sp98: 'SP98',
@@ -590,6 +598,11 @@ function showStatus(msg, isError) {
   el.innerHTML = msg;
 }
 
+function getStationBrand(s) {
+  const info = stationNames[String(s.id)];
+  return info ? (info.brand || info.name) : null;
+}
+
 // ─── Render ───
 function renderStations(fuel) {
   const list = document.getElementById('station-list');
@@ -633,7 +646,7 @@ function renderStations(fuel) {
     <div class="station-card${isBest ? ' best' : ''}" onclick="flyTo(${lat},${lon})">
       <div class="station-top">
         <div>
-          ${s.enseignes ? `<div class="station-brand">${s.enseignes}</div>` : ''}
+          ${getStationBrand(s) ? `<div class="station-brand">${getStationBrand(s)}</div>` : ''}
           <div class="station-name">
             ${s.ville || 'Station'}
             ${isBest ? '<span class="badge-best">Meilleur prix</span>' : ''}
@@ -700,7 +713,7 @@ function renderMapMarkers(fuel) {
 
     const marker = L.marker([lat, lon], { icon })
       .addTo(map)
-      .bindPopup(`<strong>${s.enseignes || s.ville || 'Station'}</strong><br>${s.adresse || ''}<br><strong style="color:${FUEL_COLORS[fuel]}">${FUEL_LABELS[fuel]} : ${formatPrice(price)}</strong>`);
+      .bindPopup(`<strong>${getStationBrand(s) || s.ville || 'Station'}</strong><br>${s.adresse || ''}<br><strong style="color:${FUEL_COLORS[fuel]}">${FUEL_LABELS[fuel]} : ${formatPrice(price)}</strong>`);
     stationMarkers.push(marker);
   });
 
