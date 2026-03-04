@@ -436,10 +436,12 @@ let map = null, userMarker = null;
 let stationMarkers = [];
 let stations = [];
 let stationNames = {};
+let osmStationNames = {}; // Cache for OSM-resolved station names
 let mapVisible = false;
 
 const API_BASE = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/prix-des-carburants-en-france-flux-instantane-v2/records';
 const STATIONS_NAME_URL = 'https://raw.githubusercontent.com/Aohzan/hass-prixcarburant/master/custom_components/prix_carburant/stations_name.json';
+const OVERPASS_API = 'https://overpass-api.de/api/interpreter';
 
 // ─── Load station names ───
 fetch(STATIONS_NAME_URL)
@@ -629,6 +631,12 @@ async function fetchStations() {
     showStatus(`${stations.length} station${stations.length > 1 ? 's' : ''} trouvée${stations.length > 1 ? 's' : ''}`);
     renderStations(fuel);
     if (mapVisible) renderMapMarkers(fuel);
+
+    // Enrich unnamed stations via OSM in the background, then re-render
+    enrichStationsFromOSM(stations).then(() => {
+      renderStations(fuel);
+      if (mapVisible) renderMapMarkers(fuel);
+    });
   } catch (e) {
     console.error(e);
     showStatus('Erreur lors du chargement : ' + e.message, true);
@@ -671,18 +679,84 @@ function showStatus(msg, isError) {
 function getStationName(s) {
   const info = stationNames[String(s.id)];
   if (info) return info.name || info.brand || s.ville || 'Station';
+  const osm = osmStationNames[String(s.id)];
+  if (osm) return osm.name || osm.brand || s.ville || 'Station';
   return s.ville || 'Station';
 }
 
 function getStationBrand(s) {
   const info = stationNames[String(s.id)];
-  return info ? (info.brand || info.name) : null;
+  if (info) return info.brand || info.name || null;
+  const osm = osmStationNames[String(s.id)];
+  return osm ? (osm.brand || osm.name || null) : null;
 }
 
 function getStationLogo(s) {
   const brand = getStationBrand(s);
   if (!brand) return null;
   return getBrandLogoUrl(brand);
+}
+
+// ─── OSM Overpass lookup for unnamed stations ───
+async function enrichStationsFromOSM(stationsList) {
+  // Find stations that have no name in the community file
+  const unnamed = stationsList.filter(s => !stationNames[String(s.id)]);
+  if (unnamed.length === 0) return;
+
+  // Compute coordinates for unnamed stations
+  const coords = unnamed.map(s => {
+    const lat = (s.geom && s.geom.lat) || (s.latitude && s.latitude / 100000);
+    const lon = (s.geom && s.geom.lon) || (s.longitude && s.longitude / 100000);
+    return { id: s.id, lat, lon };
+  }).filter(c => c.lat && c.lon);
+
+  if (coords.length === 0) return;
+
+  // Skip stations already resolved via OSM
+  const toResolve = coords.filter(c => !osmStationNames[String(c.id)]);
+  if (toResolve.length === 0) return;
+
+  // Build a single Overpass query: search for fuel stations near user location
+  const radius = document.getElementById('radius-select').value;
+  const radiusM = radius * 1000;
+  const query = `[out:json][timeout:10];(node["amenity"="fuel"](around:${radiusM},${userLat},${userLon});way["amenity"="fuel"](around:${radiusM},${userLat},${userLon}););out center tags;`;
+
+  try {
+    const resp = await fetch(OVERPASS_API, {
+      method: 'POST',
+      body: 'data=' + encodeURIComponent(query),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const osmNodes = (data.elements || []).map(el => ({
+      lat: el.lat || (el.center && el.center.lat),
+      lon: el.lon || (el.center && el.center.lon),
+      name: el.tags && (el.tags.name || el.tags['name:fr']),
+      brand: el.tags && (el.tags.brand || el.tags.operator)
+    })).filter(n => n.lat && n.lon && (n.name || n.brand));
+
+    // Match each unnamed station to the closest OSM node (within 150m)
+    for (const c of toResolve) {
+      let bestDist = Infinity;
+      let bestMatch = null;
+      for (const osm of osmNodes) {
+        const d = haversine(c.lat, c.lon, osm.lat, osm.lon) * 1000; // meters
+        if (d < bestDist) {
+          bestDist = d;
+          bestMatch = osm;
+        }
+      }
+      if (bestMatch && bestDist < 150) {
+        osmStationNames[String(c.id)] = {
+          name: bestMatch.name || null,
+          brand: bestMatch.brand || null
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('Overpass lookup failed:', e.message);
+  }
 }
 
 // ─── Compute station data ───
