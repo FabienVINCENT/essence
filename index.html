@@ -452,51 +452,58 @@ const FUEL_LABELS = {
   e10: 'E10', e85: 'E85', gplc: 'GPLc'
 };
 
-// ─── Brand logos ───
-const BRAND_LOGOS = {
-  'totalenergies': 'https://logo.clearbit.com/totalenergies.com',
-  'total': 'https://logo.clearbit.com/totalenergies.com',
-  'total access': 'https://logo.clearbit.com/totalenergies.com',
-  'shell': 'https://logo.clearbit.com/shell.com',
-  'esso': 'https://logo.clearbit.com/esso.fr',
-  'esso express': 'https://logo.clearbit.com/esso.fr',
-  'bp': 'https://logo.clearbit.com/bp.com',
-  'avia': 'https://logo.clearbit.com/avia-france.fr',
-  'intermarché': 'https://logo.clearbit.com/intermarche.com',
-  'intermarche': 'https://logo.clearbit.com/intermarche.com',
-  'leclerc': 'https://logo.clearbit.com/e.leclerc',
-  'e.leclerc': 'https://logo.clearbit.com/e.leclerc',
-  'carrefour': 'https://logo.clearbit.com/carrefour.fr',
-  'carrefour market': 'https://logo.clearbit.com/carrefour.fr',
-  'carrefour contact': 'https://logo.clearbit.com/carrefour.fr',
-  'carrefour express': 'https://logo.clearbit.com/carrefour.fr',
-  'auchan': 'https://logo.clearbit.com/auchan.fr',
-  'super u': 'https://logo.clearbit.com/magasins-u.com',
-  'système u': 'https://logo.clearbit.com/magasins-u.com',
-  'hyper u': 'https://logo.clearbit.com/magasins-u.com',
-  'u express': 'https://logo.clearbit.com/magasins-u.com',
-  'casino': 'https://logo.clearbit.com/groupe-casino.fr',
-  'géant casino': 'https://logo.clearbit.com/groupe-casino.fr',
-  'netto': 'https://logo.clearbit.com/netto.fr',
-  'lidl': 'https://logo.clearbit.com/lidl.fr',
-  'aldi': 'https://logo.clearbit.com/aldi.fr',
-  'cora': 'https://logo.clearbit.com/cora.fr',
-  'match': 'https://logo.clearbit.com/supermarchesmatch.fr',
-  'elan': 'https://logo.clearbit.com/elan-fr.com',
-  'dyneff': 'https://logo.clearbit.com/dyneff.fr',
-  'vito': 'https://logo.clearbit.com/vito.lu',
-  'simply market': 'https://logo.clearbit.com/auchan.fr',
-  'monoprix': 'https://logo.clearbit.com/monoprix.fr',
-  'colruyt': 'https://logo.clearbit.com/colruyt.fr',
-  'spar': 'https://logo.clearbit.com/spar.fr',
-  'huit à huit': 'https://logo.clearbit.com/carrefour.fr',
-  '8 à huit': 'https://logo.clearbit.com/carrefour.fr',
-  'g20': 'https://logo.clearbit.com/g20.fr',
-  'atac': 'https://logo.clearbit.com/auchan.fr',
-  'bi1': 'https://logo.clearbit.com/bi1.fr',
-  'agip': 'https://logo.clearbit.com/eni.com',
-  'eni': 'https://logo.clearbit.com/eni.com',
+// ─── Brand logos (Google Favicon API) ───
+const BRAND_DOMAINS = {
+  'totalenergies': 'totalenergies.fr',
+  'total': 'totalenergies.fr',
+  'total access': 'totalenergies.fr',
+  'shell': 'shell.fr',
+  'esso': 'esso.fr',
+  'esso express': 'esso.fr',
+  'bp': 'bp.com',
+  'avia': 'avia-france.fr',
+  'intermarché': 'intermarche.com',
+  'intermarche': 'intermarche.com',
+  'leclerc': 'e.leclerc',
+  'e.leclerc': 'e.leclerc',
+  'carrefour': 'carrefour.fr',
+  'carrefour market': 'carrefour.fr',
+  'carrefour contact': 'carrefour.fr',
+  'carrefour express': 'carrefour.fr',
+  'auchan': 'auchan.fr',
+  'super u': 'magasins-u.com',
+  'système u': 'magasins-u.com',
+  'hyper u': 'magasins-u.com',
+  'u express': 'magasins-u.com',
+  'casino': 'groupe-casino.fr',
+  'géant casino': 'groupe-casino.fr',
+  'netto': 'netto.fr',
+  'lidl': 'lidl.fr',
+  'aldi': 'aldi.fr',
+  'cora': 'cora.fr',
+  'match': 'supermarchesmatch.fr',
+  'elan': 'elan-fr.com',
+  'dyneff': 'dyneff.fr',
+  'vito': 'vito.lu',
+  'simply market': 'auchan.fr',
+  'monoprix': 'monoprix.fr',
+  'colruyt': 'colruyt.fr',
+  'spar': 'spar.fr',
+  'huit à huit': 'carrefour.fr',
+  '8 à huit': 'carrefour.fr',
+  'g20': 'g20.fr',
+  'atac': 'auchan.fr',
+  'bi1': 'bi1.fr',
+  'agip': 'eni.com',
+  'eni': 'eni.com',
 };
+
+function getBrandLogoUrl(brand) {
+  const key = brand.toLowerCase().trim();
+  const domain = BRAND_DOMAINS[key];
+  if (!domain) return null;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
 
 // ─── Geolocation ───
 function startLocate() {
@@ -675,8 +682,7 @@ function getStationBrand(s) {
 function getStationLogo(s) {
   const brand = getStationBrand(s);
   if (!brand) return null;
-  const key = brand.toLowerCase().trim();
-  return BRAND_LOGOS[key] || null;
+  return getBrandLogoUrl(brand);
 }
 
 // ─── Compute station data ───
