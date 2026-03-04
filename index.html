@@ -132,11 +132,35 @@
     line-height: 1;
     margin-bottom: 8px;
   }
+  .hero-station-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .station-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    object-fit: contain;
+    background: #fff;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+  .station-logo-sm {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    object-fit: contain;
+    background: #fff;
+    padding: 2px;
+    flex-shrink: 0;
+  }
   .hero-station {
     font-size: 15px;
     font-weight: 600;
     color: var(--text);
-    margin-bottom: 4px;
+    margin-bottom: 0;
   }
   .hero-meta {
     font-size: 13px;
@@ -212,13 +236,22 @@
   .station-row-2 {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     margin-bottom: 2px;
+  }
+  .station-name-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
   }
   .station-name {
     font-size: 14px;
     font-weight: 500;
     color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .station-distance {
     font-size: 13px;
@@ -419,6 +452,59 @@ const FUEL_LABELS = {
   e10: 'E10', e85: 'E85', gplc: 'GPLc'
 };
 
+// ─── Brand logos (Google Favicon API) ───
+const BRAND_DOMAINS = {
+  'totalenergies': 'totalenergies.fr',
+  'total': 'totalenergies.fr',
+  'total access': 'totalenergies.fr',
+  'shell': 'shell.fr',
+  'esso': 'esso.fr',
+  'esso express': 'esso.fr',
+  'bp': 'bp.com',
+  'avia': 'avia-france.fr',
+  'intermarché': 'intermarche.com',
+  'intermarche': 'intermarche.com',
+  'leclerc': 'e.leclerc',
+  'e.leclerc': 'e.leclerc',
+  'carrefour': 'carrefour.fr',
+  'carrefour market': 'carrefour.fr',
+  'carrefour contact': 'carrefour.fr',
+  'carrefour express': 'carrefour.fr',
+  'auchan': 'auchan.fr',
+  'super u': 'magasins-u.com',
+  'système u': 'magasins-u.com',
+  'hyper u': 'magasins-u.com',
+  'u express': 'magasins-u.com',
+  'casino': 'groupe-casino.fr',
+  'géant casino': 'groupe-casino.fr',
+  'netto': 'netto.fr',
+  'lidl': 'lidl.fr',
+  'aldi': 'aldi.fr',
+  'cora': 'cora.fr',
+  'match': 'supermarchesmatch.fr',
+  'elan': 'elan-fr.com',
+  'dyneff': 'dyneff.fr',
+  'vito': 'vito.lu',
+  'simply market': 'auchan.fr',
+  'monoprix': 'monoprix.fr',
+  'colruyt': 'colruyt.fr',
+  'spar': 'spar.fr',
+  'huit à huit': 'carrefour.fr',
+  '8 à huit': 'carrefour.fr',
+  'g20': 'g20.fr',
+  'atac': 'auchan.fr',
+  'bi1': 'bi1.fr',
+  'agip': 'eni.com',
+  'eni': 'eni.com',
+};
+
+function getBrandLogoUrl(brand) {
+  const key = brand.toLowerCase().trim();
+  const domain = BRAND_DOMAINS[key];
+  if (!domain) return null;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
+
 // ─── Geolocation ───
 function startLocate() {
   const btn = document.getElementById('locate-btn');
@@ -593,6 +679,12 @@ function getStationBrand(s) {
   return info ? (info.brand || info.name) : null;
 }
 
+function getStationLogo(s) {
+  const brand = getStationBrand(s);
+  if (!brand) return null;
+  return getBrandLogoUrl(brand);
+}
+
 // ─── Compute station data ───
 function computeStationData(s, fuel, conso) {
   const lat = (s.geom && s.geom.lat) || (s.latitude && s.latitude / 100000);
@@ -632,11 +724,15 @@ function renderStations(fuel) {
   const best = stationsData[0];
   if (best) {
     const s = best.station;
+    const heroLogo = getStationLogo(s);
     heroEl.innerHTML = `
       <div class="hero-card">
         <div class="hero-label">Meilleur prix</div>
         <div class="hero-price">${formatPrice(best.price)} €/L</div>
-        <div class="hero-station">${getStationName(s)}</div>
+        <div class="hero-station-row">
+          ${heroLogo ? `<img class="station-logo" src="${heroLogo}" alt="" onerror="this.style.display='none'">` : ''}
+          <div class="hero-station">${getStationName(s)}</div>
+        </div>
         <div class="hero-meta">${best.road ? best.road.toFixed(1) + ' km' : '—'} · ${s.adresse || ''}</div>
         <div class="hero-cost">Plein 40L = ${best.fullCost < Infinity ? best.fullCost.toFixed(2).replace('.', ',') + ' €' : '—'}</div>
         <div class="hero-trip-cost">(dont ${best.tripCost ? best.tripCost.toFixed(2).replace('.', ',') : '0,00'} € de trajet)</div>
@@ -652,6 +748,7 @@ function renderStations(fuel) {
   listEl.innerHTML = rest.map(d => {
     const s = d.station;
     const name = getStationBrand(s) || getStationName(s);
+    const logo = getStationLogo(s);
     return `
       <a class="station-card" href="${d.navUrl}" target="_blank" rel="noopener">
         <div class="station-row-1">
@@ -659,7 +756,10 @@ function renderStations(fuel) {
           <span class="station-full-cost">Plein: ${d.fullCost < Infinity ? d.fullCost.toFixed(2).replace('.', ',') + ' €' : '—'}</span>
         </div>
         <div class="station-row-2">
-          <span class="station-name">${name}</span>
+          <div class="station-name-group">
+            ${logo ? `<img class="station-logo-sm" src="${logo}" alt="" onerror="this.style.display='none'">` : ''}
+            <span class="station-name">${name}</span>
+          </div>
           <span class="station-distance">${d.road ? d.road.toFixed(1) + ' km' : '—'}</span>
         </div>
         <div class="station-address">${s.adresse || ''}</div>
