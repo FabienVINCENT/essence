@@ -722,14 +722,14 @@ async function enrichStationsFromOSM(stationsList) {
   // Build a single Overpass query: search for fuel stations near user location
   const radius = document.getElementById('radius-select').value;
   const radiusM = radius * 1000;
-  const query = `[out:json][timeout:25];(node["amenity"="fuel"](around:${radiusM},${userLat},${userLon});way["amenity"="fuel"](around:${radiusM},${userLat},${userLon}););out center tags;`;
+  const query = `[out:json][timeout:45];(node["amenity"="fuel"](around:${radiusM},${userLat},${userLon});way["amenity"="fuel"](around:${radiusM},${userLat},${userLon}););out center tags;`;
 
   try {
     let data = null;
     for (const api of OVERPASS_APIS) {
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 30000);
+        const timer = setTimeout(() => controller.abort(), 50000);
         const resp = await fetch(api, {
           method: 'POST',
           body: 'data=' + encodeURIComponent(query),
@@ -738,7 +738,13 @@ async function enrichStationsFromOSM(stationsList) {
         });
         clearTimeout(timer);
         if (!resp.ok) continue;
-        data = await resp.json();
+        const text = await resp.text();
+        if (text.includes('runtime error') || text.includes('timeout')) {
+          console.warn('Overpass server busy on ' + api);
+          continue;
+        }
+        data = JSON.parse(text);
+        if (!data.elements) continue;
         break;
       } catch (err) {
         console.warn('Overpass request failed on ' + api + ':', err.message);
