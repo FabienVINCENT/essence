@@ -382,7 +382,7 @@
       <option value="e10">E10</option>
       <option value="sp95">SP95</option>
       <option value="sp98">SP98</option>
-      <option value="gazole">Gazole</option>
+      <option value="gazole" selected>Gazole</option>
       <option value="e85">E85</option>
     </select>
     <select id="radius-select">
@@ -783,7 +783,7 @@ function computeStationData(s, fuel, conso) {
   const road = dist ? roadDistance(dist) : null;
   const price = s[fuel + '_prix'];
   const tripCost = road && price ? (road * 2 * conso / 100 * price) : 0;
-  const fullCost = price ? price * 40 + tripCost : Infinity;
+  const fullCost = price ? price * 50 + tripCost : Infinity;
   const addr = [s.adresse, s.cp, s.ville].filter(Boolean).join(', ');
   const navUrl = lat && lon ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}` : '#';
 
@@ -824,7 +824,7 @@ function renderStations(fuel) {
           <div class="hero-station">${getStationName(s)}</div>
         </div>
         <div class="hero-meta">${best.road ? best.road.toFixed(1) + ' km' : '—'} · ${s.adresse || ''}</div>
-        <div class="hero-cost">Plein 40L = ${best.fullCost < Infinity ? best.fullCost.toFixed(2).replace('.', ',') + ' €' : '—'}</div>
+        <div class="hero-cost">Plein 50L = ${best.fullCost < Infinity ? best.fullCost.toFixed(2).replace('.', ',') + ' €' : '—'}</div>
         <div class="hero-trip-cost">(dont ${best.tripCost ? best.tripCost.toFixed(2).replace('.', ',') : '0,00'} € de trajet)</div>
         <a class="hero-btn" href="${best.navUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
